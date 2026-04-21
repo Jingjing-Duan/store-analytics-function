@@ -1,50 +1,29 @@
-bin/
-**/bin/
-!Modules/**
-obj
-csx
-.vs
-edge
-Publish
+# Node modules
+node_modules/
 
-*.user
-*.suo
-*.cscfg
-*.Cache
-project.lock.json
+# Logs
+*.log
 
-/packages
-/TestResults
-
-/tools/NuGet.exe
-/App_Data
-/secrets
-/data
-.secrets
-appsettings.json
+# Azure Functions local settings (敏感信息)
 local.settings.json
 
-node_modules
-dist
-
-# Local python packages
-.python_packages/
-
-# Python Environments
+# Environment variables
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+.env.*
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# VS Code
+.vscode/
 
-# Azurite artifacts
-__blobstorage__
-__queuestorage__
-__azurite_db*__.json
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build / temp
+dist/
+build/
+.tmp/
+.cache/
+
+# Azure Functions artifacts
+bin/
+obj/

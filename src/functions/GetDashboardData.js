@@ -1,6 +1,15 @@
 const { app } = require('@azure/functions');
 const { BlobServiceClient } = require('@azure/storage-blob');
 
+const files = [
+  "abandon.json",
+  "conversion.json",
+  "price.json",
+  "riskstatus.json",
+  "totalorder.json",
+  "totalrevenue.json"
+];
+
 let blobServiceClient;
 
 function getBlobServiceClient() {
@@ -36,42 +45,47 @@ app.http('GetDashboardData', {
   handler: async (request, context) => {
     try {
       const containerName = process.env.BLOB_CONTAINER_NAME || 'adfoutput';
-      const fileName = process.env.BLOB_FILE_NAME || 'output.json';
+      //const fileName = process.env.BLOB_FILE_NAME || 'output.json';
 
       const serviceClient = getBlobServiceClient();
       const containerClient = serviceClient.getContainerClient(containerName);
-      const blobClient = containerClient.getBlobClient(fileName);
 
-      const exists = await blobClient.exists();
+      const results = {};
 
-      if (!exists) {
-        return {
-          status: 404,
-          jsonBody: {
-            message: `Blob not found: ${containerName}/${fileName}`
-          }
-        };
+      for(const file of files){
+        const blobClient = containerClient.getBlobClient(file);
+
+        const exists = await blobClient.exists();
+
+        if (!exists) {
+          return {
+            status: 404,
+            jsonBody: {
+              message: `Blob not found: ${containerName}/${file}`
+            }
+          };
+        }
+
+        const downloadResponse = await blobClient.download();
+        const text = await streamToText(downloadResponse.readableStreamBody);
+
+        let jsonData;
+        try {
+          jsonData = JSON.parse(text);
+          results[file.replace(".json","")] = jsonData;
+        } catch (parseError) {
+          return {
+            status: 500,
+            jsonBody: {
+              message: 'Blob exists, but content is not valid JSON.',
+              error: parseError.message
+            }
+          };
+        }
       }
-
-      const downloadResponse = await blobClient.download();
-      const text = await streamToText(downloadResponse.readableStreamBody);
-
-      let jsonData;
-      try {
-        jsonData = JSON.parse(text);
-      } catch (parseError) {
-        return {
-          status: 500,
-          jsonBody: {
-            message: 'Blob exists, but content is not valid JSON.',
-            error: parseError.message
-          }
-        };
-      }
-
       return {
         status: 200,
-        jsonBody: jsonData
+        jsonBody: results
       };
     } catch (error) {
       context.error('Error reading blob:', error);
